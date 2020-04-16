@@ -1,0 +1,27 @@
+###############################################################################
+#
+#  PACKAGE:  Raspberry Pi based recording scale (scale)
+#     FILE:  scaled.service
+#    TITLE:  systemd unit file for the scale daemon (scaled.service)
+# FUNCTION:  Specifies parameters for automated startup/shutdown of the scale
+#            daemon by systemd.
+#    USAGE:  Copied, edited, enabled and started by the option script.
+#   AUTHOR:  papamac
+#  VERSION:  1.0.2
+#     DATE:  April 10, 2020
+#
+###############################################################################
+
+[Unit]
+Description=recording scale daemon
+Requires=pigpiod
+After=poigpiod
+
+[Service]
+Type=forking
+PIDFile=/run/scaled.pid
+ExecStart=/usr/local/bin/scale -d -l INFO
+
+[Install]
+Alias=/usr/local/lib/systemd/system/scale.service
+WantedBy=multi-user.target

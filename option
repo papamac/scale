@@ -1,0 +1,100 @@
+###############################################################################
+#
+#  PACKAGE:  Raspberry Pi based recording scale (scale)
+#     FILE:  option
+#    TITLE:  Optionally install and start the scale daemon
+# FUNCTION:  Install, enable, and start the scale daemon using systemd.
+#    USAGE:  Use with papamac's personal package utility (p2pkg).  See below.
+#   AUTHOR:  papamac
+#  VERSION:  1.0.1
+#     DATE:  April 16, 2020
+#
+#
+# MIT LICENSE:
+#
+# Copyright (c) 2020 David A. Krause, aka papamac
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+#
+#
+# DESCRIPTION:
+#
+# The option script installs, enables, and starts the scale daemon unit file
+# (scaled.service) that has already been downloaded to the src sub-directory
+# of the current working directory (src/pidacs).
+#
+# Before starting, option checks to see if the scale package has been
+# installed.  If not, it aborts the option execution.  If so, option copies
+# the daemon unit file (src/pidacs/scaled.service) to a user library on the
+# systemd search path (/usr/local/lib/systemd/system).  It then edits the unit
+# file in place to reference the current working directory in the executable
+# command line.  Finally, option enables the unit file and restarts the daemon
+# using the systemd systemctl utility.
+#
+# option is designed to be used with papamac's personal package utility
+# (p2pkg).  Normally, the scale package is downloaded to the current working
+# directory using ftp (p2pkg -f) or git (p2pkg -g) and then installed
+# (p2pkg -i).  Following this, the daemon can optionally be installed using
+# this option script (p2pkg -o).  Usage examples are as follows:
+#
+# sudo p2pkg -o scale                   # Install the scale daemon using the
+#                                         previously downloaded unit file in
+#                                         the current working directory.
+# cd /usr/local                         # Install the scale deamon using the
+# sudo p2pkg -o scale                     previously downloaded unit file in
+#                                         /usr/local/src/scale.
+# cd /usr/local                         # Same as above, but first download the
+# sudo p2pkg -gio scale                   scale package from github and install
+#                                         it in /usr/local.
+#
+#
+# DEPENDENCIES/LIMITATIONS:
+#
+# option must be run using sudo because it copies and edits files in the root-
+# owned directory /usr/local/lib/systemd/system.
+#
+###############################################################################
+
+daemon_name=${pkg_name_lower}d          # daemon name.
+daemon_unit=$daemon_name.service        # systemd unit file for the daemon.
+systemd=/usr/local/lib/systemd/system   # user library on the systemd search
+#                                         path.
+
+# Ensure that the scale package has been downloaded and installed.
+
+if [[ ! -f $bin/$pkg_name_lower ]]; then
+    errmsg "option: $pkg_name not installed; option aborted"
+    echo_exit 1
+fi
+
+# Copy the daemon unit file from src/scale to /usr/local/lib/systemd/system.
+# Change the prefix in the unit file executable path name to the current
+# working directory.
+
+infomsg "$g${t}option:$n installing $c$t$daemon_unit$n in $b$t$systemd$n"
+mkdir -p $systemd
+cp $pkg/$daemon_unit $systemd
+sed -i "s|/usr/local|$PWD|" $systemd/$daemon_unit
+
+# Enable the daemon unit and restart the daemon.
+
+infomsg "$g${t}option:$n enabling $c$t$daemon_unit$n and restarting $m$t$daemon_name$n"
+systemctl enable $systemd/$daemon_unit
+systemctl restart $daemon_name
+systemctl status $daemon_name
