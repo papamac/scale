@@ -13,8 +13,8 @@ FUNCTION:  scale provides an application program that powers a Raspberry Pi
            as a daemon the additional daemon option (-d) must be set.  See
            usage examples below.
   AUTHOR:  papamac
- VERSION:  1.0.12
-    DATE:  April 16, 2020
+ VERSION:  1.0.3
+    DATE:  May 23, 2020
 
 
 MIT LICENSE:
@@ -49,9 +49,10 @@ DEPENDENCIES/LIMITATIONS:
 ****************************** needs work *************************************
 
 """
+
 __author__ = 'papamac'
-__version__ = '1.0.1'
-__date__ = 'April 6, 2020'
+__version__ = '1.0.3'
+__date__ = 'May 23, 2020'
 
 
 from os import fork

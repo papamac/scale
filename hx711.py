@@ -11,8 +11,8 @@ FUNCTION:  hx711.py provides methods to read, zero, and calibrate a scale based
   AUTHOR:  papamac
            Adapted from the unlicensed HX711 class by Ben Nuttall at
            http://abyz.me.uk/rpi/pigpio/code/HX711_py.zip
- VERSION:  1.0.1
-    DATE:  April 16, 2020
+ VERSION:  1.0.2
+    DATE:  May 23, 2020
 
 
 MIT LICENSE:
@@ -47,9 +47,10 @@ DEPENDENCIES/LIMITATIONS:
 ****************************** needs work *************************************
 
 """
+
 __author__ = 'papamac'
-__version__ = '1.0.1'
-__date__ = 'April 16, 2020'
+__version__ = '1.0.2'
+__date__ = 'May 23, 2020'
 
 
 from datetime import datetime
@@ -80,6 +81,7 @@ class HX711:
     """
     A class to read the HX711 24-bit ADC.
     """
+
     # Private_methods:
 
     def __init__(self, gpio, clock=CLOCK, data=DATA, mode=DEFAULT_MODE,
