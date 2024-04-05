@@ -137,7 +137,11 @@ scale.zero()
 prior_volume = scale.read() / SPECIFIC_GRAVITY
 prior_time = start_time = monotonic()
 flow_start_time = 0
+flow_stop_time = 0
 max_flow_rate = 0
+total_volume = 0
+flow_duration = 0
+avg_flow_rate = 0
 num_readings = 0
 running = True
 stop = False
@@ -146,20 +150,43 @@ while running:
     volume = scale.read() / SPECIFIC_GRAVITY
     time = monotonic()
     num_readings += 1
-    if abs(volume) < 0.2:  # No flow yet.
+
+    # Detect flow start and stop.  Collect
+
+    if abs(volume) < 0.2:  # No flow yet; display volume and continue.
         display('%6.1f' % volume, font='courbd.ttf', size=28)
-    else:  # Flow in progress.
+
+    elif not flow_stop_time:  # Flowing - flow started, but has not stopped.
+
+        # Capture flow start time and flow time.
+
         if not flow_start_time:
             flow_start_time = time
         flow_time = time - flow_start_time
-        display('%6.1f\n%6.1f' % (volume, flow_time),
-                font='courbd.ttf', size=28)
-        LOG.data('%12f %12f', volume, flow_time)
+
+        # Calculate instantaneous and maximum flow rates.
+
         flow_rate = (volume - prior_volume) / (time - prior_time)
         if max_flow_rate < flow_rate < 100:
             max_flow_rate = flow_rate
-        prior_volume = volume
-        prior_time = time
+
+        # Display and log instantaneous data during active flow.
+
+        display('%6.1f\n%6.1f' % (volume, flow_time),
+                font='courbd.ttf', size=28)
+        LOG.data('%6.1f %6.1f %6.1f %6.1f',
+                 volume, flow_time, flow_rate, max_flow_rate)
+
+        # Detect end of flow.
+
+        if abs(volume - prior_volume) < 0.2:  # Flow has stopped.
+            total_volume = volume
+            flow_stop_time = time
+            flow_duration = flow_time
+            avg_flow_rate = total_volume / flow_duration
+
+    prior_volume = volume
+    prior_time = time
 
     if button1.is_pressed:
         display('Zero', size=28)
@@ -170,7 +197,8 @@ while running:
         max_flow_rate = 0
     elif button2.is_pressed:
         display('Record', size=28)
-        LOG.info('%12f %12f', volume, max_flow_rate)
+        LOG.info('%6.1f %6.1f %6.1f %6.1f',
+                 volume, flow_duration, avg_flow_rate, max_flow_rate)
         sleep(1.0)
     elif bottom_button.is_pressed:
         display('Calibrate', size=28)
