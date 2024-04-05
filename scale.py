@@ -194,6 +194,7 @@ while running:
         prior_volume = scale.read() / SPECIFIC_GRAVITY
         prior_time = monotonic()
         flow_start_time = 0
+        flow_stop_time = 0
         max_flow_rate = 0
     elif button2.is_pressed:
         display('Record', size=28)
@@ -209,6 +210,7 @@ while running:
         prior_volume = scale.read() / SPECIFIC_GRAVITY
         prior_time = monotonic()
         flow_start_time = 0
+        flow_stop_time = 0
         max_flow_rate = 0
     elif left_button.is_pressed:
         display('Low gain', size=28)
