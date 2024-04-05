@@ -151,7 +151,7 @@ while running:
     time = monotonic()
     num_readings += 1
 
-    # Detect flow start and stop.  Collect
+    # Detect flow start and stop.  Collect flow data.
 
     if abs(volume) < 0.2:  # No flow yet; display volume and continue.
         display('%6.1f' % volume, font='courbd.ttf', size=28)
@@ -161,7 +161,7 @@ while running:
         # Capture flow start time and flow time.
 
         if not flow_start_time:
-            flow_start_time = time
+            flow_start_time = prior_time
         flow_time = time - flow_start_time
 
         # Calculate instantaneous and maximum flow rates.
@@ -177,7 +177,7 @@ while running:
         LOG.data('%6.1f %6.1f %6.1f %6.1f',
                  volume, flow_time, flow_rate, max_flow_rate)
 
-        # Detect end of flow.
+        # Detect the end of flow.
 
         if abs(volume - prior_volume) < 0.2:  # Flow has stopped.
             total_volume = volume
@@ -207,6 +207,8 @@ while running:
         display('Place 100g wt\nPress again')
         bottom_button.wait_for_press()
         scale.calibrate()
+        display('Remove 100g wt\nPress again')
+        bottom_button.wait_for_press()
         prior_volume = scale.read() / SPECIFIC_GRAVITY
         prior_time = monotonic()
         flow_start_time = 0
