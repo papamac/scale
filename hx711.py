@@ -130,16 +130,20 @@ class HX711:
 
         self._gain = GAINS[mode]
         self._offset = 0.0
-        self._cal = DEFAULT_CALIBRATION
         dir_path = Path(cal_dir)
         dir_path.mkdir(parents=True, exist_ok=True)
         self._cal_path = dir_path / Path('calibration')
         if self._cal_path.is_file():
             cal_file = open(self._cal_path, 'r')
             cal_str = cal_file.read()
-            if cal_str.replace('.', '', 1).isdecimal():
-                self._cal = float(cal_str)
             cal_file.close()
+            try:  # Check for valid calibration constant.
+                cal = float(cal_str)
+            except ValueError:
+                cal = DEFAULT_CALIBRATION
+            if cal <= 0.0:
+                cal = DEFAULT_CALIBRATION
+            self._cal = cal
 
         # Start the HX711.
 

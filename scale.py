@@ -13,8 +13,8 @@ FUNCTION:  scale provides an application program that powers a Raspberry Pi
            as a daemon the additional daemon option (-d) must be set.  See
            usage examples below.
   AUTHOR:  papamac
- VERSION:  1.0.3
-    DATE:  May 23, 2020
+ VERSION:  1.0.4
+    DATE:  April 5, 2024
 
 
 MIT LICENSE:
@@ -51,8 +51,8 @@ DEPENDENCIES/LIMITATIONS:
 """
 
 __author__ = 'papamac'
-__version__ = '1.0.3'
-__date__ = 'May 23, 2020'
+__version__ = '1.0.4'
+__date__ = 'April 5, 2025'
 
 
 from os import fork
@@ -77,6 +77,7 @@ from papamaclib.colortext import getLogger
 
 LOG = getLogger('Plugin')
 PID_PATH = Path('/run/scaled.pid')
+SPECIFIC_GRAVITY = 1.01  # Specific gravity of fluid being measured.
 
 
 # scale functions:
@@ -133,34 +134,43 @@ oled.show()
 
 display('Zero', size=28)
 scale.zero()
-prior_value = scale.read()
+prior_volume = scale.read() / SPECIFIC_GRAVITY
 prior_time = start_time = monotonic()
-max_rate = 0
+flow_start_time = 0
+max_flow_rate = 0
 num_readings = 0
 running = True
 stop = False
 
 while running:
-    value = scale.read()
+    volume = scale.read() / SPECIFIC_GRAVITY
     time = monotonic()
     num_readings += 1
-    rate = (value - prior_value)/(time-prior_time)
-    if max_rate < rate < 100:
-        max_rate = rate
-    display('%6.1f\n%6.1f' % (value, max_rate), font='courbd.ttf', size=28)
-    LOG.data('%12f %12f', value, max_rate)
-    prior_value = value
-    prior_time = time
+    if abs(volume) < 0.2:  # No flow yet.
+        display('%6.1f' % volume, font='courbd.ttf', size=28)
+    else:  # Flow in progress.
+        if not flow_start_time:
+            flow_start_time = time
+        flow_time = time - flow_start_time
+        display('%6.1f\n%6.1f' % (volume, flow_time),
+                font='courbd.ttf', size=28)
+        LOG.data('%12f %12f', volume, flow_time)
+        flow_rate = (volume - prior_volume) / (time - prior_time)
+        if max_flow_rate < flow_rate < 100:
+            max_flow_rate = flow_rate
+        prior_volume = volume
+        prior_time = time
 
     if button1.is_pressed:
         display('Zero', size=28)
         scale.zero()
-        prior_value = scale.read()
+        prior_volume = scale.read() / SPECIFIC_GRAVITY
         prior_time = monotonic()
-        max_rate = 0
+        flow_start_time = 0
+        max_flow_rate = 0
     elif button2.is_pressed:
         display('Record', size=28)
-        LOG.info('%12f %12f', value, max_rate)
+        LOG.info('%12f %12f', volume, max_flow_rate)
         sleep(1.0)
     elif bottom_button.is_pressed:
         display('Calibrate', size=28)
@@ -168,9 +178,10 @@ while running:
         display('Place 100g wt\nPress again')
         bottom_button.wait_for_press()
         scale.calibrate()
-        prior_value = scale.read()
+        prior_volume = scale.read() / SPECIFIC_GRAVITY
         prior_time = monotonic()
-        max_rate = 0
+        flow_start_time = 0
+        max_flow_rate = 0
     elif left_button.is_pressed:
         display('Low gain', size=28)
         scale.set_mode(CH_A_GAIN_64)
