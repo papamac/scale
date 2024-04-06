@@ -162,10 +162,10 @@ while running:
 
             if not flow_start_time:  # Just starting; set flow start time.
                 flow_start_time = prior_time
-                flow_time = time - flow_start_time
 
-            # Calculate instantaneous and maximum flow rates.
+            # Calculate instantaneous data values.
 
+            flow_time = time - flow_start_time
             flow_rate = (volume - prior_volume) / (time - prior_time)
             if max_flow_rate < flow_rate < 100:
                 max_flow_rate = flow_rate
