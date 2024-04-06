@@ -156,7 +156,7 @@ while running:
     if not flow_stop_time:
 
         volume2 = (volume + prior_volume) / 2
-        if not flow_start_time and abs(volume2) < 0.3:  # Flow not started yet.
+        if not flow_start_time and abs(volume) < 0.3:  # Flow not started yet.
             display('%6.1f' % volume, font='courbd.ttf', size=28)
 
         else:  # Flow is continuing or is just starting.
@@ -179,7 +179,7 @@ while running:
 
             # Detect the end of flow.
 
-            if volume == prior_volume:  # Flow has stopped.
+            if abs(volume - prior_volume) < 0.1:  # Flow has stopped.
                 total_volume = volume
                 flow_stop_time = time
                 flow_duration = flow_time
