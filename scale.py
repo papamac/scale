@@ -155,7 +155,8 @@ while running:
 
     if not flow_stop_time:
 
-        if not flow_start_time and abs(volume) < 0.2:  # Flow not started yet.
+        volume2 = (volume + prior_volume) / 2
+        if not flow_start_time and abs(volume2) < 0.2:  # Flow not started yet.
             display('%6.1f' % volume, font='courbd.ttf', size=28)
 
         else:  # Flow is continuing or is just starting.
@@ -163,14 +164,13 @@ while running:
             if not flow_start_time:  # Just starting; set flow start time.
                 flow_start_time = prior_time
 
-            # Calculate instantaneous data values.
+            # Calculate, display, and log instantaneous data values during
+            # active flow.
 
             flow_time = time - flow_start_time
             flow_rate = (volume - prior_volume) / (time - prior_time)
             if max_flow_rate < flow_rate < 100:
                 max_flow_rate = flow_rate
-
-            # Display and log instantaneous data during active flow.
 
             display('%6.1f\n%6.1f' % (volume, flow_time),
                     font='courbd.ttf', size=28)
