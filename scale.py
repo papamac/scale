@@ -136,12 +136,10 @@ display('Zero', size=28)
 scale.zero()
 prior_volume = scale.read() / SPECIFIC_GRAVITY
 prior_time = start_time = monotonic()
+flow_stopped = False
 flow_start_time = 0
-flow_stop_time = 0
 max_flow_rate = 0
-total_volume = 0
-flow_duration = 0
-avg_flow_rate = 0
+flow_time = 0
 num_readings = 0
 running = True
 stop = False
@@ -153,14 +151,10 @@ while running:
 
     # Detect flow start and stop.  Collect data during flow period.
 
-    if not flow_stop_time:
-
-        volume2 = (volume + prior_volume) / 2
-        if not flow_start_time and abs(volume) < 0.3:  # Flow not started yet.
+    if not flow_stopped:
+        if abs(volume) < 0.3:  # Flow not started yet; display and continue.
             display('%6.1f' % volume, font='courbd.ttf', size=28)
-
-        else:  # Flow is continuing or is just starting.
-
+        else:
             if not flow_start_time:  # Just starting; set flow start time.
                 flow_start_time = prior_time
 
@@ -179,11 +173,11 @@ while running:
 
             # Detect the end of flow.
 
-            if abs(volume - prior_volume) < 0.1:  # Flow has stopped.
-                total_volume = volume
-                flow_stop_time = time
-                flow_duration = flow_time
-                avg_flow_rate = total_volume / flow_duration
+            flow_stopped = abs(volume - prior_volume) < 0.1
+            if flow_stopped:
+                avg_flow_rate = volume / flow_time
+                LOG.info('%6.1f %6.1f %6.1f %6.1f',
+                         volume, flow_time, avg_flow_rate, max_flow_rate)
 
     prior_volume = volume
     prior_time = time
@@ -194,12 +188,13 @@ while running:
         prior_volume = scale.read() / SPECIFIC_GRAVITY
         prior_time = monotonic()
         flow_start_time = 0
-        flow_stop_time = 0
+        flow_stopped = False
         max_flow_rate = 0
     elif button2.is_pressed:
         display('Record', size=28)
+        avg_flow_rate = volume / flow_time
         LOG.info('%6.1f %6.1f %6.1f %6.1f',
-                 volume, flow_duration, avg_flow_rate, max_flow_rate)
+                 volume, flow_time, avg_flow_rate, max_flow_rate)
         sleep(1.0)
     elif bottom_button.is_pressed:
         display('Calibrate', size=28)
@@ -212,7 +207,7 @@ while running:
         prior_volume = scale.read() / SPECIFIC_GRAVITY
         prior_time = monotonic()
         flow_start_time = 0
-        flow_stop_time = 0
+        flow_stopped = False
         max_flow_rate = 0
     elif left_button.is_pressed:
         display('Low gain', size=28)
