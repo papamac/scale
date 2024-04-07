@@ -79,8 +79,18 @@ LOG = getLogger('Plugin')
 PID_PATH = Path('/run/scaled.pid')
 SPECIFIC_GRAVITY = 1.01  # Specific gravity of fluid being measured.
 
-
 # scale functions:
+
+def initialize_flow_variables():
+    global prior_volume, prior_time, flow_stopped
+    global flow_start_time, max_flow_rate, flow_time
+    prior_volume = scale.read() / SPECIFIC_GRAVITY
+    prior_time = monotonic()
+    flow_stopped = False
+    flow_start_time = 0
+    max_flow_rate = 0
+    flow_time = 0
+
 
 def display(text, font='arialbd.ttf', size=18):
     image = Image.new('1', (oled.width, oled.height))
@@ -134,15 +144,12 @@ oled.show()
 
 display('Zero', size=28)
 scale.zero()
-prior_volume = scale.read() / SPECIFIC_GRAVITY
-prior_time = start_time = monotonic()
-flow_stopped = False
-flow_start_time = 0
-max_flow_rate = 0
-flow_time = 0
+
 num_readings = 0
+start_time = monotonic()
 running = True
 stop = False
+initialize_flow_variables()
 
 while running:
     volume = scale.read() / SPECIFIC_GRAVITY
@@ -185,11 +192,7 @@ while running:
     if button1.is_pressed:
         display('Zero', size=28)
         scale.zero()
-        prior_volume = scale.read() / SPECIFIC_GRAVITY
-        prior_time = monotonic()
-        flow_start_time = 0
-        flow_stopped = False
-        max_flow_rate = 0
+        initialize_flow_variables()
     elif button2.is_pressed:
         display('Record', size=28)
         avg_flow_rate = volume / flow_time
@@ -204,11 +207,7 @@ while running:
         scale.calibrate()
         display('Remove wt\nPress again')
         bottom_button.wait_for_press()
-        prior_volume = scale.read() / SPECIFIC_GRAVITY
-        prior_time = monotonic()
-        flow_start_time = 0
-        flow_stopped = False
-        max_flow_rate = 0
+        initialize_flow_variables()
     elif left_button.is_pressed:
         display('Low gain', size=28)
         scale.set_mode(CH_A_GAIN_64)
