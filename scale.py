@@ -51,8 +51,8 @@ DEPENDENCIES/LIMITATIONS:
 """
 
 __author__ = 'papamac'
-__version__ = '1.0.4'
-__date__ = 'April 5, 2025'
+__version__ = '1.0.5'
+__date__ = 'April 8, 2025'
 
 
 from os import fork
@@ -82,13 +82,14 @@ SPECIFIC_GRAVITY = 1.01  # Specific gravity of fluid being measured.
 # scale functions:
 
 def initialize_flow_variables():
-    global prior_volume, prior_time, flow_stopped
-    global flow_start_time, max_flow_rate, flow_time
+    global prior_volume, prior_time, flow_stopped, flow_start_time
+    global max_flow_rate, avg_flow_rate, flow_time
     prior_volume = scale.read() / SPECIFIC_GRAVITY
     prior_time = monotonic()
     flow_stopped = False
     flow_start_time = 0
     max_flow_rate = 0
+    avg_flow_rate = 0
     flow_time = 0
 
 
@@ -173,18 +174,18 @@ while running:
             if max_flow_rate < flow_rate < 100:
                 max_flow_rate = flow_rate
 
-            display('%6.1f\n%6.1f' % (volume, flow_time),
+            display('v%6.1f\nt%6.1f' % (volume, flow_time),
                     font='courbd.ttf', size=28)
-            LOG.data('%6.1f %6.1f %6.1f %6.1f',
-                     volume, flow_time, flow_rate, max_flow_rate)
+            #  LOG.data('%6.1f %6.1f %6.1f %6.1f',
+            #           volume, flow_time, flow_rate, max_flow_rate)
 
             # Detect the end of flow.
 
             flow_stopped = abs(volume - prior_volume) < 0.1
             if flow_stopped:
                 avg_flow_rate = volume / flow_time
-                LOG.info('%6.1f %6.1f %6.1f %6.1f',
-                         volume, flow_time, avg_flow_rate, max_flow_rate)
+                LOG.info('v%6.1f t%6.1f m%6.1f,a%6.1f',
+                         volume, flow_time, max_flow_rate, avg_flow_rate)
 
     prior_volume = volume
     prior_time = time
@@ -194,11 +195,8 @@ while running:
         scale.zero()
         initialize_flow_variables()
     elif button2.is_pressed:
-        display('Record', size=28)
-        avg_flow_rate = volume / flow_time
-        LOG.info('%6.1f %6.1f %6.1f %6.1f',
-                 volume, flow_time, avg_flow_rate, max_flow_rate)
-        sleep(1.0)
+        display('m%6.1f\na%6.1f' % (max_flow_rate, avg_flow_rate),
+                font='courbd.ttf', size=28)
     elif bottom_button.is_pressed:
         display('Calibrate', size=28)
         scale.zero()
